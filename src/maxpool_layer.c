@@ -16,12 +16,41 @@ matrix forward_maxpool_layer(layer l, matrix in)
     free_matrix(*l.x);
     *l.x = copy_matrix(in);
 
+    int i, c, h, w;
+    int fr, fc;
+    int outr, outc;
     int outw = (l.width-1)/l.stride + 1;
     int outh = (l.height-1)/l.stride + 1;
     matrix out = make_matrix(in.rows, outw*outh*l.channels);
 
     // TODO: 6.1 - iterate over the input and fill in the output with max values
+    for (i = 0; i < in.rows; i++) {
+        // get 1 image
+        image example = float_to_image(in.data + i*in.cols, l.width, l.height, l.channels);
+        
+        // loop over original image by channel, rows, then collumn
+        for (c = 0; c < example.c; c++) {
+            for (h = 0, outr = 0; h < example.h; h += l.stride, outr++) {
+                for (w = 0, outc = 0; w < example.w; w += l.stride, outc++) {
+                    float max = FLT_MIN;
+                    
+                    // loop over the maxpool filter
+                    for (fr = 0; fr < l.size; fr++) {
+                        float val;
+                        for (fc = 0; fc < l.size; fc++) {
+                            if (w + fc >= 0 && h + fr >= 0 && w + fc < example.w && h + fr < example.h) {
+                                val = get_pixel(example, w + fc, h + fr, c);
+                                if (val > max) { max = val;}
+                            }
+                        }
+                    }
 
+                    set_matrix(out, i, (outh * outw * c) + (outw * outr) + outc, max);
+                }
+            }
+        }
+        free_image(example);
+    }
 
 
     return out;
@@ -32,6 +61,10 @@ matrix forward_maxpool_layer(layer l, matrix in)
 // matrix dy: error term for the previous layer
 matrix backward_maxpool_layer(layer l, matrix dy)
 {
+    int i, c, h, w;
+    int fr, fc;
+    int outr, outc;
+
     matrix in    = *l.x;
     matrix dx = make_matrix(dy.rows, l.width*l.height*l.channels);
 
@@ -40,8 +73,40 @@ matrix backward_maxpool_layer(layer l, matrix dy)
     // TODO: 6.2 - find the max values in the input again and fill in the
     // corresponding delta with the delta from the output. This should be
     // similar to the forward method in structure.
+    for (i = 0; i < in.rows; i++) {
+        // get 1 image
+        image example = float_to_image(in.data + i*in.cols, l.width, l.height, l.channels);
+        
+        // loop over original image by channel, rows, then collumn
+        for (c = 0; c < example.c; c++) {
+            for (h = 0, outr = 0; h < example.h; h += l.stride, outr++) {
+                for (w = 0, outc = 0; w < example.w; w += l.stride, outc++) {
+                    float max = FLT_MIN;
+                    int idxr = 0;
+                    int idxc = 0;
+                    float val;
+                    
+                    // loop over the maxpool filter
+                    for (fr = 0; fr < l.size; fr++) {
+                        for (fc = 0; fc < l.size; fc++) {
+                            if (w + fc >= 0 && h + fr >= 0 && w + fc < example.w && h + fr < example.h) {
+                                val = get_pixel(example, w + fc, h + fr, c);
+                                if (val > max) {
+                                    max = val;
+                                    idxr = fr;
+                                    idxc = fc;
+                                }
+                            }
+                        }
+                    }
 
-
+                    val = get_matrix(dy, i, (outh * outw * c) + (outw * outr) + outc);
+                    set_matrix(dx, i, (l.height * l.width * c) + (l.width * (h + idxr)) + (w + idxc), val);
+                }
+            }
+        }
+        free_image(example);
+    }
 
     return dx;
 }

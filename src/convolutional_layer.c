@@ -49,15 +49,43 @@ matrix backward_convolutional_bias(matrix dy, int n)
 matrix im2col(image im, int size, int stride)
 {
     int i, j, k;
+    int kr, kc;
+    float val;
+    int outc, outr;
+    int k_size = size * size;
     int outw = (im.w-1)/stride + 1;
     int outh = (im.h-1)/stride + 1;
     int rows = im.c*size*size;
     int cols = outw * outh;
     matrix col = make_matrix(rows, cols);
 
+    int k_start = (1 - size) / 2;
+    int k_end = (1 + size) / 2;
+
+    printf("im2col");
     // TODO: 5.1
     // Fill in the column matrix with patches from the image
+    for (i = 0; i < im.c; i++) {
 
+        for (j = 0, outc = 0; j < im.h; j += stride) {
+            for (k = 0; k < im.w; k += stride, outc++) {
+
+                for (kr = k_start, outr = 0; kr < k_end; kr++) {
+                    for (kc = k_start; kc < k_end; kc++, outr++) {
+                        if (k + kc < 0 || j + kr < 0 || k + kc >= im.w || j + kr >= im.h) {
+                            val = 0;
+                        } else {
+                            val = get_pixel(im, k + kc, j + kr, i);
+                        }
+
+                        set_matrix(col, outr + i * k_size, outc, val);
+                    }
+                }
+
+            }
+        }
+
+    }
 
 
     return col;
@@ -71,6 +99,12 @@ matrix im2col(image im, int size, int stride)
 image col2im(int width, int height, int channels, matrix col, int size, int stride)
 {
     int i, j, k;
+    int k_size = size * size;
+    int outc, outr;
+    int kr, kc;
+    int k_start = (1 - size) / 2;
+    int k_end = (1 + size) / 2;
+    float val;
 
     image im = make_image(width, height, channels);
     int outw = (im.w-1)/stride + 1;
@@ -78,8 +112,25 @@ image col2im(int width, int height, int channels, matrix col, int size, int stri
 
     // TODO: 5.2
     // Add values into image im from the column matrix
-    
 
+    for (i = 0; i < im.c; i++) {
+
+        for (j = 0, outc = 0; j < im.h; j += stride) {
+            for (k = 0; k < im.w; k += stride, outc++) {
+
+                for (kr = k_start, outr = 0; kr < k_end; kr++) {
+                    for (kc = k_start; kc < k_end; kc++, outr++) {
+                        if (k + kc >= 0 && j + kr >= 0 && k + kc < im.w && j + kr < im.h) {
+                            val = get_pixel(im, k + kc, j + kr, i);
+                            set_pixel(im, k + kc, j + kr, i, val + get_matrix(col, outr + i * k_size, outc));
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }
 
     return im;
 }
@@ -174,6 +225,26 @@ matrix backward_convolutional_layer(layer l, matrix dy)
 void update_convolutional_layer(layer l, float rate, float momentum, float decay)
 {
     // TODO: 5.3
+    // Currently l.dw and l.db store:
+    // l.dw = momentum * l.dw_prev - dL/dw
+    // l.db = momentum * l.db_prev - dL/db
+
+    // For our weights we want to include weight decay:
+    // l.dw = l.dw - decay * l.w
+    axpy_matrix(-decay, l.w, l.dw);
+
+    // Then for both weights and biases we want to apply the updates:
+    // l.w = l.w + rate*l.dw
+    // l.b = l.b + rate*l.db
+    axpy_matrix(rate, l.dw, l.w);
+    axpy_matrix(rate, l.db, l.b);
+
+    // Finally, we want to scale dw and db by our momentum to prepare them for the next round
+    // l.dw *= momentum
+    // l.db *= momentum
+
+    scal_matrix(momentum, l.dw);
+    scal_matrix(momentum, l.db);
 }
 
 // Make a new convolutional layer

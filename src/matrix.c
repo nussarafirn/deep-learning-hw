@@ -5,6 +5,14 @@
 #include <assert.h>
 #include <math.h>
 
+void set_matrix(matrix m, int c, int r, float val) {
+    m.data[m.cols * r + c] = val;
+}
+
+float get_matrix(matrix m, int c, int r) {
+    return m.data[m.cols * r + c];
+}
+
 
 // Make empty matrix filled with zeros
 // int rows: number of rows in matrix

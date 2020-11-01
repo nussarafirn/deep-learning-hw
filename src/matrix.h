@@ -74,6 +74,9 @@ void read_matrix(matrix m, FILE *fp);
 matrix load_matrix(char *fname);
 void save_matrix(matrix m, char *fname);
 
+void set_matrix(matrix m, int c, int r, float val);
+float get_matrix(matrix m, int c, int r);
+
 #ifdef __cplusplus
 }
 #endif
