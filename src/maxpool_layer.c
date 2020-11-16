@@ -22,6 +22,7 @@ matrix forward_maxpool_layer(layer l, matrix in)
     int outw = (l.width-1)/l.stride + 1;
     int outh = (l.height-1)/l.stride + 1;
     matrix out = make_matrix(in.rows, outw*outh*l.channels);
+    float val;
 
     // TODO: 6.1 - iterate over the input and fill in the output with max values
     for (i = 0; i < in.rows; i++) {
@@ -36,7 +37,6 @@ matrix forward_maxpool_layer(layer l, matrix in)
                     
                     // loop over the maxpool filter
                     for (fr = 0; fr < l.size; fr++) {
-                        float val;
                         for (fc = 0; fc < l.size; fc++) {
                             if (w + fc >= 0 && h + fr >= 0 && w + fc < example.w && h + fr < example.h) {
                                 val = get_pixel(example, w + fc, h + fr, c);
@@ -49,7 +49,6 @@ matrix forward_maxpool_layer(layer l, matrix in)
                 }
             }
         }
-        free_image(example);
     }
 
 
@@ -105,7 +104,6 @@ matrix backward_maxpool_layer(layer l, matrix dy)
                 }
             }
         }
-        free_image(example);
     }
 
     return dx;

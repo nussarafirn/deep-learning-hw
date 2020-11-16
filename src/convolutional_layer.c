@@ -62,7 +62,6 @@ matrix im2col(image im, int size, int stride)
     int k_start = (1 - size) / 2;
     int k_end = (1 + size) / 2;
 
-    printf("im2col");
     // TODO: 5.1
     // Fill in the column matrix with patches from the image
     for (i = 0; i < im.c; i++) {
@@ -231,13 +230,13 @@ void update_convolutional_layer(layer l, float rate, float momentum, float decay
 
     // For our weights we want to include weight decay:
     // l.dw = l.dw - decay * l.w
-    axpy_matrix(-decay, l.w, l.dw);
+    axpy_matrix(decay, l.w, l.dw);
 
     // Then for both weights and biases we want to apply the updates:
     // l.w = l.w + rate*l.dw
     // l.b = l.b + rate*l.db
-    axpy_matrix(rate, l.dw, l.w);
-    axpy_matrix(rate, l.db, l.b);
+    axpy_matrix(-rate, l.dw, l.w);
+    axpy_matrix(-rate, l.db, l.b);
 
     // Finally, we want to scale dw and db by our momentum to prepare them for the next round
     // l.dw *= momentum

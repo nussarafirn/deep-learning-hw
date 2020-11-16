@@ -5,11 +5,20 @@
 #include <assert.h>
 #include <math.h>
 
-void set_matrix(matrix m, int c, int r, float val) {
+void set_matrix(matrix m, int r, int c, float val) {
+    if (m.cols <= c) {
+        printf("set matrix col out of bound\n");
+    }
+    if (m.rows <= r) {
+        printf("set matrix row out of bound\n");
+    }
     m.data[m.cols * r + c] = val;
 }
 
-float get_matrix(matrix m, int c, int r) {
+float get_matrix(matrix m, int r, int c) {
+    if (m.cols <= c || m.rows <= r) {
+        printf("get matrix out of bound\n");
+    }
     return m.data[m.cols * r + c];
 }
 

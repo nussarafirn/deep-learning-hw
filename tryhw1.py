@@ -44,4 +44,34 @@ print("test accuracy:     %f", accuracy_net(m, test))
 # Why are you seeing these results? Speculate based on the information you've gathered and what you know about DL and ML.
 # Your answer:
 #
-
+# The structure of my covnet was defined as the following:
+#     covnet_layer1: 32, 32, 3, 8, 3, 1
+#     covnet_layer2: 16, 16, 8, 16, 3, 1
+#     covnet_layer3: 8, 8, 16, 32, 3, 1
+#     covnet_layer4: 4, 4, 32, 64, 3, 1
+#     linear_connected_layer: 256, 10
+#      
+#    Which has the total number of operation calculated by  filter * (kernel/stride)^2 * c * w * h  for each layer
+#       = (32 * 32 * 3 * 8 * (3)^2) + (16 * 16 * 8 * 16 * (3)^2) + (8 * 8 * 16 * 32 * (3)^2) + (4 * 4 * 32 * 64 * (3)^2)
+#          + (256 * 10)
+#       = 1,108,480 operations
+#   The final accuratecy are training accuracy: 62.36%
+#                                test accuracy: 59.87%
+# 
+# While the structure of my fully connected model was defined as the following:
+#    layer1: 3072, 350
+#    layer2: 350, 350
+#    layer3: 350, 10
+# 
+#    Which has the total number of operation calculated by input * output for each layer
+#       =  3072*300 + 300 * 300 + 300*10 = 1,201,200 operations
+#   The final accuratecy training accuracy: 48.38%
+#                            test accuracy: 46.10%
+# 
+# 
+#   From the above experiment, given similar number of operations, covnet has outperformed
+# the fully connected network model. I believe that the reason behind is that when we apply
+# kernels onto the the convnet, the relationship of spatiality of those pixels that 
+# are relatively closer to each other becomes more important than the ones that are not. 
+# As an oppose, the fully connected network does not take this relationship of 
+# spitiality into account, in fact every relationship has the same importance for evaluation. 
